@@ -1,0 +1,50 @@
+@require: stdjabook
+@require: code
+@require: itemize
+
+@require: image/image
+
+let image-path = `image.JPG`
+
+in
+
+document (|
+  title = {image Manual};
+  author = {Naoki Kaneko};
+  show-toc = false;
+  show-title = true;
+|) '<
+  +p{このパッケージは手軽に画像やPDFを埋め込むためのコマンドを提供するパッケージです。}
+  +p{提供するコマンドは`\include-image`と`\include-pdf`の2つです。
+  どちらも使い方はほとんど変わりません。`\include-pdf`では読み込むPDFファイルのページ番号を指定する引数が増えるだけです。}
+  +p{`\include-image`の引数の型は`[length?; length?; float?; string]`で、それぞれ
+  \enumerate{
+    * 画像の横のサイズ（オプショナル引数）
+    * 画像の縦のサイズ（オプショナル引数）
+    * 画像の回転の角度（度数表記）（オプショナル引数）
+    * 画像のパス（必須引数）
+  }となっています。`\include-pdf`の引数の型は`[length?; length?; float?; int; string]`で、画像のパスの前にページ番号を付け加えるだけです（必須引数）。}
+  +p{では、ここから引数の効果を解説していきます。`\include-image`と`\include-pdf`の使い方はほぼ一緒なので、今回は`\include-image`だけで説明を行います。
+  ちなみにデモ画像はこのパッケージの作者が撮影した紫陽花の画像です。}
+  +p{まず、`\include-image(path);`のように、全てのオプショナル引数を省略して画像のパスだけを与えた場合は下の画像のように、横幅がテキストの横幅と同じだけになり、一切の変形や回転は行われません。}
+  +pn{\include-image(image-path);}
+  +p{次に横幅や縦幅のみを指定した場合です。`\include-image ?:(50mm) (path);`や`\include-image ?* ?:(30mm) (path);`のようにすると、下のような出力となり、指定した長さに併せて縦横の比率が一定のまま画像が拡大縮小されます。（`?*`はオプショナル引数の明示的な省略で、`?:()`はオプショナル引数を与える場合に使う構文です。）}
+  +pn{`\include-image ?:(50mm) (path);` : \include-image?:(50mm)(image-path);}
+  +pn{`\include-image ?* ?:(30mm)(path);` : \include-image?*?:(30mm)(image-path);}
+  +p{横幅と縦幅を同時に与えると、それに合うように画像が変形されます。たとえば横幅50mmで縦幅を10mmという横に長い画像になるように指定を行うと}
+  +pn{
+    `\include-image ?:(50mm) ?:(10mm) (image-path);` : \include-image ?:(50mm) ?:(10mm) (image-path);
+  }
+  +pn{という求めていた出力になります。}
+
+  +p{次に回転です。度数表記を小数で与えることで実現できます（例えば45度であれば`45.0`）。}
+  +pn{`\include-image ?:(30mm) ?* ?:(0.0) (path);` : \include-image ?:(30mm)?* ?:(0.0)(image-path);}
+  +pn{
+    45度：\include-image ?:(30mm)?*?:(45.0)(image-path);
+    90度：\include-image ?:(30mm)?*?:(90.0)(image-path);
+  }
+  +pn{
+    180度：\include-image ?:(30mm)?*?:(180.0)(image-path);
+    321度：\include-image ?:(30mm)?*?:(321.0)(image-path);
+  }
+>

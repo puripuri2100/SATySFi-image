@@ -1,0 +1,71 @@
+@require: gr
+
+module Image : sig
+
+  val include : context -> length option -> length option -> float option -> image -> inline-boxes
+  direct \include-image : [length?; length?; float?; string] inline-cmd
+  direct \include-pdf : [length?; length?; float?; int; string] inline-cmd
+
+end = struct
+
+let include ctx width-opt height-opt rotate-opt image =
+  let text-width = get-text-width ctx in
+  let base-image-ib = use-image-by-width image text-width in
+  let (base-width, base-height, _) = get-natural-metrics base-image-ib in
+  let base-image = draw-text (0pt, 0pt) base-image-ib in
+  let scale-image =
+    match (width-opt, height-opt) with
+    | (Some(width), Some(height)) -> (
+      let scale-width = width /' base-width in
+      let scale-height = height /' base-height in
+      Gr.scale-graphics (0pt, 0pt) scale-width scale-height base-image
+    )
+    | (Some(width), None) -> (
+      let scale = width /' base-width in
+      Gr.scale-graphics (0pt, 0pt) scale scale base-image
+    )
+    | (None, Some(height)) -> (
+      let scale = height /' base-height in
+      Gr.scale-graphics (0pt, 0pt) scale scale base-image
+    )
+    | (None, None) -> base-image
+  in
+  let rotate-image =
+    match rotate-opt with
+    | None -> scale-image
+    | Some(rotate) -> Gr.rotate-graphics (0pt, 0pt) rotate scale-image
+  in
+  let gr =
+    let ((x-min, y-min),_) = get-graphics-bbox rotate-image in
+    let x =
+      if x-min <' 0pt then
+        x-min *' (float (-1))
+      else
+        0pt
+    in
+    let y =
+      if y-min <' 0pt then
+        y-min *' (float (-1))
+      else
+        0pt
+    in
+    shift-graphics (x, y) rotate-image
+  in
+  let (width, height) =
+    let ((x-min, y-min), (x-max, y-max)) = get-graphics-bbox rotate-image in
+    (x-max -' x-min, y-max -' y-min)
+  in
+  inline-graphics width height 0pt (fun pt -> [shift-graphics pt gr])
+
+
+
+let-inline ctx \include-image ?:width-opt ?:height-opt ?:rotate-opt path =
+  let image = load-image path in
+  include ctx width-opt height-opt rotate-opt image
+
+
+let-inline ctx \include-pdf ?:width-opt ?:height-opt ?:rotate-opt n path =
+  let image = load-pdf-image path n in
+  include ctx width-opt height-opt rotate-opt image
+
+end
